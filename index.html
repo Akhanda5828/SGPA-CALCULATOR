@@ -7,7 +7,7 @@
     <!-- Add SheetJS library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        /* Previous styles remain same */
+        /* Basic Reset */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -22,7 +22,8 @@
         }
 
         .container {
-            max-width: 800px;
+            max-width: 100%;
+            width: 800px;
             margin: 0 auto;
             background-color: white;
             padding: 20px;
@@ -39,21 +40,25 @@
         .cgpa-inputs {
             display: flex;
             gap: 10px;
-            justify-content: center;
+            justify-content: space-between;
             margin-bottom: 20px;
             padding: 15px;
             background-color: #f8f9fa;
             border-radius: 4px;
+            flex-wrap: wrap;
         }
 
         .cgpa-inputs input {
-            width: 150px;
+            width: 100%;
+            max-width: 150px;
+            margin-bottom: 10px;
         }
 
         .subject-row {
             display: flex;
             gap: 10px;
             margin-bottom: 10px;
+            flex-wrap: wrap;
         }
 
         input, select {
@@ -61,6 +66,8 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 14px;
+            width: 100%;
+            max-width: 150px;
         }
 
         .subject-name {
@@ -78,6 +85,8 @@
             cursor: pointer;
             font-size: 14px;
             margin: 5px;
+            width: 100%;
+            max-width: 200px;
         }
 
         .add-btn {
@@ -115,11 +124,66 @@
             display: none;
         }
 
-        .import-btn{
+        .import-btn {
             background-color: black;
             color: white;
-
         }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                width: 100%;
+                padding: 15px;
+            }
+
+            .cgpa-inputs {
+                flex-direction: column;
+            }
+
+            .subject-row {
+                flex-direction: column;
+            }
+
+            .buttons {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            button {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .subject-name,
+            .grade,
+            .credits {
+                width: 100%;
+                max-width: 100%;
+            }
+        }
+
+        /* Small Screen Adjustments */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .subject-row {
+                gap: 8px;
+            }
+
+            input,
+            select {
+                font-size: 12px;
+            }
+
+            button {
+                font-size: 12px;
+                padding: 8px;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -127,7 +191,7 @@
         <h1>SGPA & CGPA Calculator</h1>
         
         <div class="cgpa-inputs">
-            <input type="string" id="Name_" placeholder="Name" step="0.05" min="0"max="10">
+            <input type="text" id="Name_" placeholder="Name">
             <input type="number" id="existing-cgpa" placeholder="Existing CGPA" step="0.01" min="0" max="10">
             <input type="number" id="current-semester" placeholder="Current Semester Number" min="1">
         </div>
@@ -164,8 +228,8 @@
     </div>
 
     <script>
-        // Previous JavaScript functions remain same
-        function addSubject() {
+           // Previous JavaScript functions remain same
+           function addSubject() {
             const container = document.getElementById('subjects-container');
             const newRow = document.createElement('div');
             newRow.className = 'subject-row';
@@ -373,7 +437,6 @@
     // Automatically calculate SGPA and CGPA after import
     calculateAll();
 }
-
     </script>
 </body>
 </html>
