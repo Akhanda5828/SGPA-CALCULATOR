@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SGPA & CGPA Calculator with Excel Import & Export</title>
-    <!-- Add SheetJS library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        /* Basic Reset */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -129,7 +127,6 @@
             color: white;
         }
 
-        /* Responsive Design */
         @media (max-width: 768px) {
             .container {
                 width: 100%;
@@ -163,7 +160,6 @@
             }
         }
 
-        /* Small Screen Adjustments */
         @media (max-width: 480px) {
             h1 {
                 font-size: 1.5em;
@@ -183,7 +179,6 @@
                 padding: 8px;
             }
         }
-
     </style>
 </head>
 <body>
@@ -228,8 +223,7 @@
     </div>
 
     <script>
-           // Previous JavaScript functions remain same
-           function addSubject() {
+        function addSubject() {
             const container = document.getElementById('subjects-container');
             const newRow = document.createElement('div');
             newRow.className = 'subject-row';
@@ -332,17 +326,14 @@
         }
 
         function exportToExcel() {
-            // First calculate the latest results
             calculateAll();
 
             const rows = document.getElementsByClassName('subject-row');
             const semester = document.getElementById('current-semester').value;
             const name = document.getElementById('Name_').value; 
             
-            // Prepare data for Excel
             const data = [];
             
-            // Add headers
             data.push([
                 'Student Name',
                 'Subject Name',
@@ -353,7 +344,6 @@
                 'Cumulative CGPA'
             ]);
             
-            // Add data for each subject
             for (let row of rows) {
                 const subjectName = row.querySelector('.subject-name').value;
                 const gradeValue = row.querySelector('.grade').value;
@@ -371,12 +361,10 @@
                 ]);
             }
             
-            // Create workbook and worksheet
             const ws = XLSX.utils.aoa_to_sheet(data);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Grades");
             
-            // Generate Excel file and trigger download
             XLSX.writeFile(wb, `Semester_${semester}_Grades.xlsx`);
         }
 
@@ -400,43 +388,60 @@
         }
 
         function processExcelData(data) {
-    // Extract relevant data
-    const subjectData = data.slice(1);  // Skip the header row
-    const semesterInput = document.getElementById('current-semester');
-    const cgpaInput = document.getElementById('existing-cgpa');
-    const name = document.getElementById('Name_');
-    
-    // Assuming the Excel sheet contains these columns: Name, Subject Name, Grade, Credits, Current Semester, Current CGPA
-    for (let i = 0; i < subjectData.length; i++) {
-        const row = subjectData[i];
-        const nameValue = row[0];         // Name column is the first column
-        const subjectName = row[1];      // Subject Name column is the second column
-        const grade = row[2];            // Grade column is the third column
-        const credits = row[3];          // Credits column is the fourth column
-        const semester = row[4];         // Current Semester column is the fifth column
-        const cgpa = row[5];             // Current CGPA column is the sixth column
+            const gradeValueMap = {
+                'A+': '10',
+                'A': '9',
+                'B+': '8',
+                'B': '7',
+                'C+': '6',
+                'C': '5',
+                'D': '4',
+                'E': '0',
+                'F': '0',
+                'I': '0'
+            };
 
-        if (i === 0) {
-            // Populate Name, Existing CGPA, and Semester (only for the first row)
-            name.value = nameValue;      // Set the Name
-            cgpaInput.value = cgpa;      // Set the Existing CGPA
-            semesterInput.value = semester; // Set the Current Semester
+            const subjectData = data.slice(1);
+            const semesterInput = document.getElementById('current-semester');
+            const cgpaInput = document.getElementById('existing-cgpa');
+            const name = document.getElementById('Name_');
+            
+            const container = document.getElementById('subjects-container');
+            while (container.children.length > 1) {
+                container.removeChild(container.lastChild);
+            }
+            
+            for (let i = 0; i < subjectData.length; i++) {
+                const row = subjectData[i];
+                const nameValue = row[0];
+                const subjectName = row[1];
+                const gradeLetter = row[2];
+                const credits = row[3];
+                const semester = row[4];
+                const cgpa = row[5];
+
+                if (i === 0) {
+                    name.value = nameValue;
+                    cgpaInput.value = cgpa;
+                    semesterInput.value = semester;
+                }
+
+                if (i > 0) {
+                    addSubject();
+                }
+
+                const subjectRows = document.getElementsByClassName('subject-row');
+                const currentRow = subjectRows[i];
+
+                const gradeValue = gradeValueMap[gradeLetter] || '';
+
+                currentRow.querySelector('.subject-name').value = subjectName;
+                currentRow.querySelector('.grade').value = gradeValue;
+                currentRow.querySelector('.credits').value = credits;
+            }
+
+            calculateAll();
         }
-
-        // Add subjects to the form (after the first row)
-        addSubject();
-        const subjectRows = document.getElementsByClassName('subject-row');
-        const lastSubjectRow = subjectRows[subjectRows.length - 1];
-
-        // Populate the subject row with data from Excel
-        lastSubjectRow.querySelector('.subject-name').value = subjectName;
-        lastSubjectRow.querySelector('.grade').value = grade;
-        lastSubjectRow.querySelector('.credits').value = credits;
-    }
-
-    // Automatically calculate SGPA and CGPA after import
-    calculateAll();
-}
     </script>
 </body>
 </html>
