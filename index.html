@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGPA & CGPA Calculator with Excel Import & Export</title>
+    <!-- Add SheetJS library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        /* Previous styles remain same */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .cgpa-inputs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .cgpa-inputs input {
+            width: 150px;
+        }
+
+        .subject-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        input, select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .subject-name {
+            flex: 2;
+        }
+
+        .grade, .credits {
+            flex: 1;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+
+        .add-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .calculate-btn {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .export-btn {
+            background-color: #9C27B0;
+            color: white;
+        }
+
+        .remove-btn {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .buttons {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .result {
+            text-align: center;
+            font-size: 1.2em;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .import-btn{
+            background-color: black;
+            color: white;
+
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SGPA & CGPA Calculator</h1>
+        
+        <div class="cgpa-inputs">
+            <input type="string" id="Name_" placeholder="Name" step="0.05" min="0"max="10">
+            <input type="number" id="existing-cgpa" placeholder="Existing CGPA" step="0.01" min="0" max="10">
+            <input type="number" id="current-semester" placeholder="Current Semester Number" min="1">
+        </div>
+
+        <div id="subjects-container">
+            <div class="subject-row">
+                <input type="text" class="subject-name" placeholder="Subject Name">
+                <select class="grade">
+                    <option value="">Grade</option>
+                    <option value="10">A+</option>
+                    <option value="9">A</option>
+                    <option value="8">B+</option>
+                    <option value="7">B</option>
+                    <option value="6">C+</option>
+                    <option value="5">C</option>
+                    <option value="4">D</option>
+                    <option value="0">E</option>
+                    <option value="0">F</option>
+                    <option value="0">I</option>
+                </select>
+                <input type="number" class="credits" placeholder="Credits" min="0">
+                <button class="remove-btn" onclick="removeSubject(this)">Remove</button>
+            </div>
+        </div>
+        
+        <div class="buttons">
+            <button class="add-btn" onclick="addSubject()">Add Subject</button>
+            <button class="calculate-btn" onclick="calculateAll()">Calculate SGPA & CGPA</button>
+            <button class="export-btn" onclick="exportToExcel()">Export to Excel</button>
+            <button class="import-btn" onclick="importFromExcel()">Import from Excel</button>
+        </div>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        // Previous JavaScript functions remain same
+        function addSubject() {
+            const container = document.getElementById('subjects-container');
+            const newRow = document.createElement('div');
+            newRow.className = 'subject-row';
+            newRow.innerHTML = `
+                <input type="text" class="subject-name" placeholder="Subject Name">
+                <select class="grade">
+                    <option value="">Grade</option>
+                    <option value="10">A+</option>
+                    <option value="9">A</option>
+                    <option value="8">B+</option>
+                    <option value="7">B</option>
+                    <option value="6">C+</option>
+                    <option value="5">C</option>
+                    <option value="4">D</option>
+                    <option value="0">E</option>
+                    <option value="0">F</option>
+                    <option value="0">I</option>
+                </select>
+                <input type="number" class="credits" placeholder="Credits" min="0">
+                <button class="remove-btn" onclick="removeSubject(this)">Remove</button>
+            `;
+            container.appendChild(newRow);
+        }
+
+        function removeSubject(button) {
+            const container = document.getElementById('subjects-container');
+            if (container.children.length > 1) {
+                button.parentElement.remove();
+            }
+        }
+
+        function calculateSGPA() {
+            let totalCredits = 0;
+            let totalGradePoints = 0;
+            const rows = document.getElementsByClassName('subject-row');
+            
+            for (let row of rows) {
+                const grade = parseFloat(row.querySelector('.grade').value) || 0;
+                const credits = parseFloat(row.querySelector('.credits').value) || 0;
+                
+                totalCredits += credits;
+                totalGradePoints += (grade * credits);
+            }
+
+            return totalCredits > 0 ? (totalGradePoints / totalCredits) : 0;
+        }
+
+        function calculateCGPA(sgpa) {
+            const existingCGPA = parseFloat(document.getElementById('existing-cgpa').value) || 0;
+            const currentSemester = parseInt(document.getElementById('current-semester').value) || 0;
+
+            if (currentSemester < 1) {
+                return { error: "Please enter a valid semester number" };
+            }
+
+            if (currentSemester === 1) {
+                return { cgpa: sgpa, error: null };
+            }
+
+            const cgpa = ((existingCGPA * (currentSemester - 1)) + sgpa) / currentSemester;
+            return { cgpa: cgpa, error: null };
+        }
+
+        let lastCalculatedSGPA = 0;
+        let lastCalculatedCGPA = 0;
+
+        function calculateAll() {
+            const sgpa = calculateSGPA();
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+
+            const cgpaResult = calculateCGPA(sgpa);
+            
+            if (cgpaResult.error) {
+                resultDiv.innerHTML = cgpaResult.error;
+                return;
+            }
+
+            lastCalculatedSGPA = sgpa;
+            lastCalculatedCGPA = cgpaResult.cgpa;
+
+            resultDiv.innerHTML = `
+                <div>Current Semester SGPA: ${sgpa.toFixed(2)}</div>
+                <div>Cumulative CGPA: ${cgpaResult.cgpa.toFixed(2)}</div>
+            `;
+        }
+
+        function getGradeLetterFromValue(value) {
+            const gradeMap = {
+                '10': 'A+',
+                '9': 'A',
+                '8': 'B+',
+                '7': 'B',
+                '6': 'C+',
+                '5': 'C',
+                '4': 'D',
+                '0': 'F'
+            };
+            return gradeMap[value] || '';
+        }
+
+        function exportToExcel() {
+            // First calculate the latest results
+            calculateAll();
+
+            const rows = document.getElementsByClassName('subject-row');
+            const semester = document.getElementById('current-semester').value;
+            const name = document.getElementById('Name_').value; 
+            
+            // Prepare data for Excel
+            const data = [];
+            
+            // Add headers
+            data.push([
+                'Student Name',
+                'Subject Name',
+                'Grade',
+                'Credits',
+                'Current Semester',
+                'Current SGPA',
+                'Cumulative CGPA'
+            ]);
+            
+            // Add data for each subject
+            for (let row of rows) {
+                const subjectName = row.querySelector('.subject-name').value;
+                const gradeValue = row.querySelector('.grade').value;
+                const gradeLetter = getGradeLetterFromValue(gradeValue);
+                const credits = row.querySelector('.credits').value;
+                
+                data.push([
+                    name,
+                    subjectName,
+                    gradeLetter,
+                    credits,
+                    semester,
+                    lastCalculatedSGPA.toFixed(2),
+                    lastCalculatedCGPA.toFixed(2)
+                ]);
+            }
+            
+            // Create workbook and worksheet
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Grades");
+            
+            // Generate Excel file and trigger download
+            XLSX.writeFile(wb, `Semester_${semester}_Grades.xlsx`);
+        }
+
+        function importFromExcel() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.xlsx, .xls';
+            input.onchange = e => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const data = new Uint8Array(event.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                    processExcelData(jsonData);
+                };
+                reader.readAsArrayBuffer(file);
+            };
+            input.click();
+        }
+
+        function processExcelData(data) {
+    // Extract relevant data
+    const subjectData = data.slice(1);  // Skip the header row
+    const semesterInput = document.getElementById('current-semester');
+    const cgpaInput = document.getElementById('existing-cgpa');
+    const name = document.getElementById('Name_');
+    
+    // Assuming the Excel sheet contains these columns: Name, Subject Name, Grade, Credits, Current Semester, Current CGPA
+    for (let i = 0; i < subjectData.length; i++) {
+        const row = subjectData[i];
+        const nameValue = row[0];         // Name column is the first column
+        const subjectName = row[1];      // Subject Name column is the second column
+        const grade = row[2];            // Grade column is the third column
+        const credits = row[3];          // Credits column is the fourth column
+        const semester = row[4];         // Current Semester column is the fifth column
+        const cgpa = row[5];             // Current CGPA column is the sixth column
+
+        if (i === 0) {
+            // Populate Name, Existing CGPA, and Semester (only for the first row)
+            name.value = nameValue;      // Set the Name
+            cgpaInput.value = cgpa;      // Set the Existing CGPA
+            semesterInput.value = semester; // Set the Current Semester
+        }
+
+        // Add subjects to the form (after the first row)
+        addSubject();
+        const subjectRows = document.getElementsByClassName('subject-row');
+        const lastSubjectRow = subjectRows[subjectRows.length - 1];
+
+        // Populate the subject row with data from Excel
+        lastSubjectRow.querySelector('.subject-name').value = subjectName;
+        lastSubjectRow.querySelector('.grade').value = grade;
+        lastSubjectRow.querySelector('.credits').value = credits;
+    }
+
+    // Automatically calculate SGPA and CGPA after import
+    calculateAll();
+}
+
+    </script>
+</body>
+</html>
